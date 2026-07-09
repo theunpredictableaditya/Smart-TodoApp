@@ -1,32 +1,61 @@
-# React + TypeScript + Vite
+# Smart Todo App
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A modern task manager built with React, TypeScript, and Vite. The app lets users add, edit, delete, complete, and reorder tasks while keeping state in local storage. It also includes a dark/light theme toggle and an animated background for a polished experience.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Add tasks with a title and priority level (High / Medium / Low)
+- Mark tasks as complete with a checkbox
+- Edit task text and priority in a modal dialog
+- Delete tasks with a single click
+- Drag-and-drop task reordering
+- Persist tasks in `localStorage`
+- Dark/light theme toggle with persisted theme selection
+- Animated star background using the included `GravityStarsBackground` component
 
-## React Compiler
+## Project structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `src/App.tsx` — application shell and background animation wrapper
+- `src/components/Todo.tsx` — main todo interface, task form, list rendering, edit modal, drag/drop, and theme logic
+- `src/components/ui/` — reusable UI components such as `Button`, `Input`, `Select`, `Dialog`, `Checkbox`, and `Badge`
+- `src/lib/functions.ts` — helper functions for local storage and task sorting
+- `src/types.ts` — shared TypeScript types for tasks and priority values
+- `src/assets/` — static assets used by the app
 
-## Expanding the Oxlint configuration
+## Technologies used
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- Shadcn UI / Base UI components
+- React Icons
+- `localStorage` persistence
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Getting started
+
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Then open the local URL shown in the terminal to use the app.
+
+## Build for production
+
+```bash
+npm run build
+```
+
+## Notes
+
+- Task data is stored in the browser, so tasks remain after refreshes on the same device/browser.
+- Theme state is also stored in `localStorage`, allowing the selected mode to persist across reloads.
+- Task priority sorting is handled when tasks are loaded from storage.
+
+## Useful scripts
+
+- `npm run dev` — start the development server
+- `npm run build` — compile the app for production
+- `npm run preview` — preview the production build locally
+- `npm run lint` — run Oxlint checks

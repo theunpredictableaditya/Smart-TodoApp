@@ -35,9 +35,16 @@ const Todo = () => {
   const [priorityValue, setPriorityValue] = useState<"High" | "Medium" | "Low">(
     "Medium",
   );
-  const [updatedPriorityValue, setUpdatedPriorityValue] = useState<"High" | "Medium" | "Low">("Medium");
-  const [currentPriorityValue, setCurrentPriorityValue] = useState< "High" | "Medium" | "Low">("Medium");
+  const [updatedPriorityValue, setUpdatedPriorityValue] = useState<
+    "High" | "Medium" | "Low"
+  >("Medium");
+  const [currentPriorityValue, setCurrentPriorityValue] = useState<
+    "High" | "Medium" | "Low"
+  >("Medium");
   const [allTasks, setAllTasks] = useState<task[]>([]);
+
+  // Drag Item Feature
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -88,23 +95,38 @@ const Todo = () => {
   const handleModalOpens = (taskName: string, priority: priorityType) => {
     setCurrentTaskValue(taskName);
     setCurrentPriorityValue(priority);
-  }
+  };
 
   const handleEditTask = (id: string) => {
     const updatedTasks = allTasks.map((task: task): task => {
-      if(task.id === id){
+      if (task.id === id) {
         return {
           ...task,
           task: updatedTaskValue || currentTaskValue,
-          priority: updatedPriorityValue || currentPriorityValue
-        }
+          priority: updatedPriorityValue || currentPriorityValue,
+        };
       } else {
         return task;
       }
-    })
+    });
 
     setAllTasks(updatedTasks);
-  }
+  };
+
+  const handleDrop = (targetId: string) => {
+    const draggedIndex: number = allTasks.findIndex(
+      (task: task): boolean => task.id === draggedItem,
+    );
+    const targetIndex: number = allTasks.findIndex(
+      (task: task): boolean => task.id === targetId,
+    );
+
+    const updatedTasks: task[] = [...allTasks];
+    const [removed] = updatedTasks.splice(draggedIndex, 1);
+    updatedTasks.splice(targetIndex, 0, removed);
+
+    setAllTasks(updatedTasks);
+  };
 
   // retrieve the data from localstorage whenever the page loads for first time
   useEffect(() => {
@@ -159,39 +181,61 @@ const Todo = () => {
         <Button type="submit">Add Task</Button>
       </form>
 
-      <div className="tasks-container w-full border-2 h-128 rounded-lg">
-        <div className="task-head w-full flex gap-0.5 mb-0.5">
-          <div className="w-1/8 text-center">Completed</div>
-          <div className="w-11/20 text-center">Task</div>
-          <div className="w-1/8 text-center">Priority</div>
-          <div className="w-1/5 text-center">Actions</div>
+      <div className="tasks-container w-full border-2 h-96 rounded-lg overflow-hidden flex flex-col">
+        <div className="task-head w-full flex gap-0.5 shrink-0 items-center border-b px-2">
+          <div className="flex-1 text-center">Completed</div>
+          <div className="flex-2 text-center">Task</div>
+          <div className="flex-1 text-center">Priority</div>
+          <div className="flex-1 text-center">Actions</div>
         </div>
 
-        <div className="tasks flex flex-col gap-1 overflow-y-auto">
+        <div className="tasks flex-1 flex flex-col gap-1 overflow-y-auto">
           {allTasks &&
             allTasks.map((task: task) => (
               <div
-                className="task w-full flex gap-0.5 bg-yellow-100 h-16 "
+                draggable
+                onDragStart={(e) => {
+                  setDraggedItem(task.id);
+
+                  const img = new Image();
+                  img.src =
+                    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB...";
+                  e.dataTransfer.setDragImage(img, 0, 0);
+                }}
+                onDragOver={(e: React.DragEvent) => e.preventDefault()}
+                onDrop={() => handleDrop(task.id)}
+                style={{
+                  padding: "10px",
+                  margin: "5px 0px",
+                  background: draggedItem === task.id ? "gray" : "lightgray",
+                  cursor: "grab",
+                }}
+                className="task w-full flex gap-0.5 bg-yellow-100 h-16 shrink-0"
                 key={task.id}
               >
-                <div className="w-1/8 text-center flex justify-center items-center">
+                <div className="flex-1 text-center flex justify-center items-center">
                   <Checkbox
+                    className={"border-orange-400"}
                     checked={task.isCompleted}
                     onCheckedChange={(checked) => handleCheck(task.id, checked)}
                   />
                 </div>
-                <div className="w-11/20 text-center flex items-center justify-center">
+                <div className="flex-[2] text-center flex items-center justify-center">
                   {task.task}
                 </div>
-                <div className="w-1/8 text-center flex items-center justify-center">
+                <div className="flex-1 text-center flex items-center justify-center">
                   <Badge className="bg-green-200 text-green-700 dark:bg-green-950 dark:text-green-300">
                     {task.priority}
                   </Badge>
                 </div>
-                <div className="w-1/5 text-center flex justify-center gap-8 items-center">
+                <div className="flex-1 text-center flex justify-center gap-8 items-center">
                   {/* <div id="edit"><BiSolidEditAlt className="hover"/></div> */}
 
-                  <Dialog onOpenChange={() => handleModalOpens(task.task, task.priority)}>
+                  <Dialog
+                    onOpenChange={() =>
+                      handleModalOpens(task.task, task.priority)
+                    }
+                  >
                     <DialogTrigger>
                       <BiSolidEditAlt className="cursor-pointer" />
                     </DialogTrigger>
@@ -220,16 +264,9 @@ const Todo = () => {
                           placeholder={currentTaskValue}
                           value={updatedTaskValue}
                           defaultValue={task.task}
-                          // onChange={(e) => {
-                          //   const updated = allTasks.map((t) =>
-                          //     t.id === task.id
-                          //       ? { ...t, task: e.target.value }
-                          //       : t,
-                          //   );
-                          //   setAllTasks(updated);
-                          // }}
-                          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUpdatedTaskValue(event.target.value)}
-
+                          onChange={(
+                            event: React.ChangeEvent<HTMLInputElement>,
+                          ) => setUpdatedTaskValue(event.target.value)}
                         />
                       </div>
 
@@ -257,16 +294,9 @@ const Todo = () => {
                         </label>
                         <Select
                           defaultValue={currentPriorityValue}
-                          // onValueChange={(val) => {
-                          //   const updated = allTasks.map((t) =>
-                          //     t.id === task.id
-                          //       ? { ...t, priority: val as priorityType }
-                          //       : t,
-                          //   );
-                          //   setAllTasks(updated);
-                          // }}
-
-                          onValueChange={(value) => setUpdatedPriorityValue(value as priorityType)}
+                          onValueChange={(value) =>
+                            setUpdatedPriorityValue(value as priorityType)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select priority" />
@@ -280,9 +310,7 @@ const Todo = () => {
                       </div>
 
                       <DialogFooter>
-                        <Button
-                          onClick={() => handleEditTask(task.id)}
-                        >
+                        <Button onClick={() => handleEditTask(task.id)}>
                           Save Changes
                         </Button>
                       </DialogFooter>

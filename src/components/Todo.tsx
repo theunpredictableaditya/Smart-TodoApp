@@ -46,6 +46,11 @@ const Todo = () => {
   // Drag Item Feature
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
+  // Theme
+  const [theme, setTheme] = useState<string>(() => {
+    return getFromLocalStorage<string>("theme") ?? "";
+  })
+
   const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     const id: string = crypto.randomUUID();
@@ -128,9 +133,23 @@ const Todo = () => {
     setAllTasks(updatedTasks);
   };
 
+  // Switch Theme 
+  const applyTheme = (value: string) => {
+    setTheme(value);
+    setInLocalStorage("theme", value);
+    document.documentElement.classList.toggle("dark", value ==="dark");
+  }
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "" : "dark";
+    applyTheme(nextTheme);
+  };
+
   // retrieve the data from localstorage whenever the page loads for first time
   useEffect(() => {
     const data = getFromLocalStorage<task[]>("todos");
+    const savedTheme = getFromLocalStorage<string>("theme");
+    applyTheme(savedTheme === "dark" ? "dark" : "");
 
     if (data) {
       const newData = sortTasks(data);
@@ -147,7 +166,7 @@ const Todo = () => {
   }, [allTasks, setAllTasks]);
 
   return (
-    <div className="main-component flex flex-col justify-center items-center gap-2 h-full min-w-2xl">
+    <div className="main-component relative flex flex-col justify-center items-center gap-2 h-full md:min-w-2xl sm:min-w-xl">
       <div>
         <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
           Smart To-Do Application
@@ -204,13 +223,7 @@ const Todo = () => {
                 }}
                 onDragOver={(e: React.DragEvent) => e.preventDefault()}
                 onDrop={() => handleDrop(task.id)}
-                style={{
-                  padding: "10px",
-                  margin: "5px 0px",
-                  background: draggedItem === task.id ? "gray" : "lightgray",
-                  cursor: "grab",
-                }}
-                className="task w-full flex gap-0.5 bg-yellow-100 h-16 shrink-0"
+                className={`p-2 my-1 cursor-grab task w-full flex gap-0.5 h-16 shrink-0 ${draggedItem === task.id ? "bg-accent" : "bg-muted"}`}
                 key={task.id}
               >
                 <div className="flex-1 text-center flex justify-center items-center">
@@ -220,7 +233,7 @@ const Todo = () => {
                     onCheckedChange={(checked) => handleCheck(task.id, checked)}
                   />
                 </div>
-                <div className="flex-[2] text-center flex items-center justify-center">
+                <div className="flex-2 text-center flex items-center justify-center">
                   {task.task}
                 </div>
                 <div className="flex-1 text-center flex items-center justify-center">
@@ -328,6 +341,8 @@ const Todo = () => {
             ))}
         </div>
       </div>
+
+      <Button onClick={toggleTheme} className={"rounded-full absolute bottom-5 right-0"}>Switch Theme</Button>
     </div>
   );
 };
